@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>我的收藏夹</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .bookmark { padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
+    .category { font-weight: bold; margin-top: 15px; }
+    input, button, select { margin: 5px; padding: 5px; }
+  </style>
+</head>
+<body>
+  <h2>我的收藏夹</h2>
+  <button onclick="logout()">退出</button><br>
+
+  <input id="search" placeholder="搜索..." oninput="filterBookmarks()"><br>
+
+  <input id="bookmark-title" placeholder="网站名称">
+  <input id="bookmark-url" placeholder="https://...">
+  <select id="bookmark-category">
+    <option value="学习">学习</option>
+    <option value="工作">工作</option>
+    <option value="娱乐">娱乐</option>
+  </select>
+  <button onclick="addBookmark()">添加</button>
+
+  <div id="bookmarks"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcsz9Lg3KmgvD_SXUdy4V5x7aCQtSdI-s",
+      authDomain: "webs-d0804.firebaseapp.com",
+      projectId: "webs-d0804",
+      storageBucket: "webs-d0804.firebasestorage.app",
+      messagingSenderId: "195195304680",
+      appId: "1:195195304680:web:01c68159689678c7f4275d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+    let currentUser = null;
+    let allBookmarks = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        currentUser = user;
+        loadBookmarks();
+      }
+    });
+
+    window.logout = async function () {
+      await signOut(auth);
+    }
+
+    window.addBookmark = async function () {
+      const title = document.getElementById("bookmark-title").value;
+      const url = document.getElementById("bookmark-url").value;
+      const category = document.getElementById("bookmark-category").value;
+      const date = new Date().toLocaleString();
+      if (!url.startsWith("http")) return alert("请输入合法网址");
+
+      await addDoc(collection(db, "bookmarks"), {
+        uid: currentUser.uid,
+        title,
+        url,
+        category,
+        date
+      });
+
+      document.getElementById("bookmark-title").value = "";
+      document.getElementById("bookmark-url").value = "";
+    }
+
+    async function loadBookmarks() {
+      const q = query(collection(db, "bookmarks"), where("uid", "==", currentUser.uid));
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById("bookmarks");
+        container.innerHTML = "";
+        const grouped = {};
+        allBookmarks = [];
+
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          allBookmarks.push({ id: docSnap.id, ...data });
+          if (!grouped[data.category]) grouped[data.category] = [];
+          grouped[data.category].push({ id: docSnap.id, ...data });
+        });
+
+        for (const [cat, items] of Object.entries(grouped)) {
+          const catEl = document.createElement("div");
+          catEl.innerHTML = `<div class="category">${cat}</div>`;
+          items.forEach(b => {
+            const div = document.createElement("div");
+            div.className = "bookmark";
+            div.innerHTML = `
+              <a href="${b.url}" target="_blank">${b.title}</a><br>
+              <small>保存于：${b.date}</small><br>
+              <button onclick="deleteBookmark('${b.id}')">删除</button>`;
+            catEl.appendChild(div);
+          });
+          container.appendChild(catEl);
+        }
+      });
+    }
+
+    window.deleteBookmark = async function (id) {
+      await deleteDoc(doc(db, "bookmarks", id));
+    }
+
+    window.filterBookmarks = function () {
+      const keyword = document.getElementById("search").value.toLowerCase();
+      document.querySelectorAll(".bookmark").forEach(el => {
+        el.style.display = el.innerText.toLowerCase().includes(keyword) ? "" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
