@@ -1,16 +1,63 @@
+
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <title>登录页面</title>
-  <script type="module" src="./config.js"></script>
-  <script type="module" src="./login.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录页面 1.1</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+    .hidden { display: none; }
+    input, button { margin: 8px 0; padding: 12px; width: 100%; box-sizing: border-box; border-radius: 6px; font-size: 16px; }
+    .container { max-width: 400px; margin: 0 auto; padding: 20px; border-radius: 8px; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: white; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .form-section { display: flex; flex-direction: column; gap: 15px; }
+    button { background-color: #4CAF50; color: white; border: none; cursor: pointer; transition: 0.3s ease; }
+    button:hover { background-color: #45a049; }
+    .link { text-align: center; margin-top: 10px; }
+    .link a { color: #4CAF50; text-decoration: none; }
+
+    .fade-in { animation: fadeIn 1s ease-in-out; }
+    .slide-in { animation: slideIn 0.5s ease-out; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
 </head>
 <body>
-  <h2>请登录</h2>
-  <input type="email" id="email" placeholder="邮箱">
-  <input type="password" id="password" placeholder="密码">
-  <button onclick="login()">登录</button>
-  <button onclick="signup()">注册</button>
+
+  <div class="container">
+    <h2 id="title">欢迎，请登录</h2>
+
+    <div id="login-section" class="fade-in">
+      <div class="form-section">
+        <input type="email" id="email" placeholder="邮箱" required />
+        <input type="password" id="password" placeholder="密码" required />
+      </div>
+      <button onclick="login()">登录</button>
+      <div class="link">
+        <span>没有账号？ <a href="#" onclick="showSignup()">注册</a></span>
+      </div>
+    </div>
+
+    <div id="signup-section" class="hidden fade-in">
+      <div class="form-section">
+        <input type="email" id="signup-email" placeholder="邮箱" required />
+        <input type="password" id="signup-password" placeholder="密码" required />
+        <input type="password" id="confirm-password" placeholder="确认密码" required />
+      </div>
+      <button onclick="signup()">注册</button>
+      <div class="link">
+        <span>已经有账号？ <a href="#" onclick="showLogin()">登录</a></span>
+      </div>
+    </div>
+
+    <div id="app" class="hidden fade-in">
+      <button onclick="logout()">退出</button>
+      <h3>欢迎回来！</h3>
+    </div>
+  </div>
+
+  <script type="module" src="login.js"></script>
 </body>
 </html>
