@@ -1,14 +1,9 @@
-
-// Firebase 配置文件
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+export const firebaseConfig = {
+  apiKey: "AIzaSyCcsz9Lg3KmgvD_SXUdy4V5x7aCQtSdI-s",
+  authDomain: "webs-d0804.firebaseapp.com",
+  projectId: "webs-d0804",
+  storageBucket: "webs-d0804.firebasestorage.app",
+  messagingSenderId: "195195304680",
+  appId: "1:195195304680:web:01c68159689678c7f4275d",
+  measurementId: "G-RRQ7RFHV76"
 };
-
-export const app = initializeApp(firebaseConfig);

@@ -1,29 +1,16 @@
-
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>登录页面</title>
-  <script type="module" src="login.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="./config.js"></script>
+  <script type="module" src="./login.js"></script>
 </head>
 <body>
-  <div class="form-toggle">
-    <button id="showLogin">登录</button>
-    <button id="showRegister">注册</button>
-  </div>
-
-  <form id="loginForm" class="form active">
-    <input type="email" id="loginEmail" placeholder="邮箱" required />
-    <input type="password" id="loginPassword" placeholder="密码" required />
-    <button type="submit">登录</button>
-  </form>
-
-  <form id="registerForm" class="form">
-    <input type="email" id="registerEmail" placeholder="邮箱" required />
-    <input type="password" id="registerPassword" placeholder="密码" required />
-    <button type="submit">注册</button>
-  </form>
+  <h2>请登录</h2>
+  <input type="email" id="email" placeholder="邮箱">
+  <input type="password" id="password" placeholder="密码">
+  <button onclick="login()">登录</button>
+  <button onclick="signup()">注册</button>
 </body>
 </html>
