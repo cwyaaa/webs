@@ -1,24 +1,30 @@
-
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>收藏夹</title>
-  <script type="module" src="bookmarks.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <title>我的收藏夹</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button, select { margin: 5px; padding: 5px; }
+    .bookmark { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    .category { font-weight: bold; margin-top: 20px; }
+  </style>
+  <script type="module" src="./config.js"></script>
+  <script type="module" src="./bookmarks.js"></script>
 </head>
 <body>
-  <h1>我的收藏夹</h1>
-  <div class="bookmark-container">
-    <div class="bookmark-column" id="leftColumn">
-      <h2>全部收藏</h2>
-      <ul id="bookmarkList"></ul>
-    </div>
-    <div class="bookmark-column" id="rightColumn">
-      <h2>高频收藏</h2>
-      <ul id="topBookmarks"></ul>
-    </div>
-  </div>
+  <h2 id="title">欢迎</h2>
+  <button onclick="logout()">退出</button>
+  <h3>添加收藏</h3>
+  <input id="bookmark-title" placeholder="网站名称" />
+  <input id="bookmark-url" placeholder="https://..." />
+  <select id="bookmark-category">
+    <option value="学习">学习</option>
+    <option value="娱乐">娱乐</option>
+    <option value="工作">工作</option>
+  </select>
+  <button onclick="addBookmark()">添加</button>
+  <input id="search" placeholder="搜索收藏" oninput="searchBookmarks()" />
+  <div id="bookmarks"></div>
 </body>
 </html>
