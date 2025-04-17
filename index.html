@@ -1,36 +1,29 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>登录页面</title>
+  <script type="module" src="login.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h2 id="title">欢迎，请登录</h2>
-    <div id="login-section" class="fade-in">
-      <div class="form-section">
-        <input type="email" id="email" placeholder="邮箱" required />
-        <input type="password" id="password" placeholder="密码" required />
-      </div>
-      <button onclick="login()">登录</button>
-      <div class="link">
-        <span>没有账号？ <a href="#" onclick="showSignup()">注册</a></span>
-      </div>
-    </div>
-    <div id="signup-section" class="hidden fade-in">
-      <div class="form-section">
-        <input type="email" id="signup-email" placeholder="邮箱" required />
-        <input type="password" id="signup-password" placeholder="密码" required />
-        <input type="password" id="confirm-password" placeholder="确认密码" required />
-      </div>
-      <button onclick="signup()">注册</button>
-      <div class="link">
-        <span>已经有账号？ <a href="#" onclick="showLogin()">登录</a></span>
-      </div>
-    </div>
+  <div class="form-toggle">
+    <button id="showLogin">登录</button>
+    <button id="showRegister">注册</button>
   </div>
-  <script type="module" src="login.js"></script>
+
+  <form id="loginForm" class="form active">
+    <input type="email" id="loginEmail" placeholder="邮箱" required />
+    <input type="password" id="loginPassword" placeholder="密码" required />
+    <button type="submit">登录</button>
+  </form>
+
+  <form id="registerForm" class="form">
+    <input type="email" id="registerEmail" placeholder="邮箱" required />
+    <input type="password" id="registerPassword" placeholder="密码" required />
+    <button type="submit">注册</button>
+  </form>
 </body>
 </html>
