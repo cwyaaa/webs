@@ -1,130 +1,123 @@
-import { firebase } from './config.js';
+// bookmarks.js
 
-// 获取 DOM 元素
-const titleInput = document.getElementById('bookmark-title');
-const urlInput = document.getElementById('bookmark-url');
-const categorySelect = document.getElementById('bookmark-category');
-const bookmarksContainer = document.getElementById('bookmarks');
-const searchInput = document.getElementById('search');
-const favoriteContainer = document.getElementById('favorite-bookmarks');
-const logoutButton = document.querySelector('button');
-
-// 登录和退出功能
-auth.onAuthStateChanged(user => {
+// 确保 Firebase 已经加载并初始化
+firebase.auth().onAuthStateChanged(user => {
   if (user) {
-    document.getElementById('title').textContent = `欢迎, ${user.displayName}`;
-    displayBookmarks(user);
+    console.log("已登录用户：", user.uid);
+    loadBookmarks(user.uid);
   } else {
-    document.getElementById('title').textContent = '请登录';
-    window.location.href = 'login.html';  // 登录页面
+    console.log("未登录");
   }
-});
-
-// 用户退出
-logoutButton.addEventListener('click', () => {
-  auth.signOut();
 });
 
 // 添加书签
-async function addBookmark() {
-  const title = titleInput.value;
-  const url = urlInput.value;
-  const category = categorySelect.value;
-
+function addBookmark() {
+  const title = document.getElementById('bookmark-title').value;
+  const url = document.getElementById('bookmark-url').value;
+  const category = document.getElementById('bookmark-category').value;
+  
   if (title && url) {
-    const user = auth.currentUser;
-    const bookmark = {
+    const userId = firebase.auth().currentUser.uid;
+
+    db.collection('bookmarks').doc(userId).collection('items').add({
       title,
       url,
       category,
-      favorite: false,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    // 添加到 Firestore
-    await db.collection('bookmarks').add({
-      ...bookmark,
-      userId: user.uid
+      favorite: false, // 默认不为收藏
+    }).then(() => {
+      console.log("书签已添加");
+      loadBookmarks(userId); // 更新显示的书签
+    }).catch(error => {
+      console.error("添加书签失败", error);
     });
-
-    // 清空输入框
-    titleInput.value = '';
-    urlInput.value = '';
-    categorySelect.value = '学习';
-
-    // 刷新书签列表
-    displayBookmarks(user);
+  } else {
+    alert("请填写完整书签信息！");
   }
 }
 
-// 显示书签
-async function displayBookmarks(user) {
-  const bookmarksSnapshot = await db.collection('bookmarks')
-    .where('userId', '==', user.uid)
-    .orderBy('timestamp', 'desc')
-    .get();
-  
-  bookmarksContainer.innerHTML = '';  // 清空书签容器
-  const favoriteBookmarks = [];
+// 加载书签
+function loadBookmarks(userId) {
+  db.collection('bookmarks').doc(userId).collection('items')
+    .onSnapshot(snapshot => {
+      const bookmarksContainer = document.getElementById('bookmarks');
+      bookmarksContainer.innerHTML = ''; // 清空当前书签列表
 
-  bookmarksSnapshot.forEach(doc => {
-    const data = doc.data();
-    const bookmarkDiv = document.createElement('div');
-    bookmarkDiv.className = 'bookmark';
-    
-    // 判断是否是收藏
-    const favoriteButton = document.createElement('button');
-    favoriteButton.className = 'favorite-button';
-    favoriteButton.textContent = data.favorite ? '已收藏' : '收藏';
-    favoriteButton.onclick = () => toggleFavorite(doc.id, data.favorite);
-
-    bookmarkDiv.innerHTML = `
-      <div class="bookmark-title">${data.title}</div>
-      <div class="bookmark-url"><a href="${data.url}" target="_blank">${data.url}</a></div>
-      <div class="category">${data.category}</div>
-      <div class="count">添加时间: ${new Date(data.timestamp.seconds * 1000).toLocaleString()}</div>
-    `;
-    
-    bookmarkDiv.appendChild(favoriteButton);
-    bookmarksContainer.appendChild(bookmarkDiv);
-
-    // 添加到收藏夹
-    if (data.favorite) {
-      const favoriteDiv = document.createElement('div');
-      favoriteDiv.textContent = `${data.title} - ${data.url}`;
-      favoriteBookmarks.push(favoriteDiv);
-    }
-  });
-
-  favoriteContainer.innerHTML = '';  // 清空收藏夹容器
-  favoriteBookmarks.forEach(fav => favoriteContainer.appendChild(fav));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const bookmarkElement = document.createElement('div');
+        bookmarkElement.classList.add('bookmark');
+        bookmarkElement.innerHTML = `
+          <div class="bookmark-title">${data.title}</div>
+          <div class="bookmark-url"><a href="${data.url}" target="_blank">${data.url}</a></div>
+          <div class="category">${data.category}</div>
+          <div class="count">${data.favorite ? "已收藏" : "未收藏"}</div>
+          <button onclick="toggleFavorite('${doc.id}', ${data.favorite})" class="favorite-button">
+            ${data.favorite ? "取消收藏" : "收藏"}
+          </button>
+          <button onclick="deleteBookmark('${doc.id}')" class="delete-button">删除</button>
+        `;
+        bookmarksContainer.appendChild(bookmarkElement);
+      });
+    });
 }
 
-// 收藏/取消收藏
-async function toggleFavorite(bookmarkId, currentFavoriteStatus) {
-  const user = auth.currentUser;
-  const bookmarkRef = db.collection('bookmarks').doc(bookmarkId);
-  await bookmarkRef.update({
-    favorite: !currentFavoriteStatus
-  });
+// 切换收藏状态
+function toggleFavorite(bookmarkId, currentStatus) {
+  const userId = firebase.auth().currentUser.uid;
+  db.collection('bookmarks').doc(userId).collection('items').doc(bookmarkId)
+    .update({
+      favorite: !currentStatus
+    }).then(() => {
+      console.log("收藏状态已更新");
+    }).catch(error => {
+      console.error("更新收藏状态失败", error);
+    });
+}
 
-  // 刷新书签列表
-  displayBookmarks(user);
+// 删除书签
+function deleteBookmark(bookmarkId) {
+  const userId = firebase.auth().currentUser.uid;
+  db.collection('bookmarks').doc(userId).collection('items').doc(bookmarkId)
+    .delete().then(() => {
+      console.log("书签已删除");
+    }).catch(error => {
+      console.error("删除书签失败", error);
+    });
 }
 
 // 搜索书签
 function searchBookmarks() {
-  const searchText = searchInput.value.toLowerCase();
-  const bookmarks = document.querySelectorAll('.bookmark');
+  const searchTerm = document.getElementById('search').value.toLowerCase();
+  const userId = firebase.auth().currentUser.uid;
 
-  bookmarks.forEach(bookmark => {
-    const title = bookmark.querySelector('.bookmark-title').textContent.toLowerCase();
-    const url = bookmark.querySelector('.bookmark-url').textContent.toLowerCase();
+  db.collection('bookmarks').doc(userId).collection('items')
+    .where('title', '>=', searchTerm)
+    .where('title', '<=', searchTerm + '\uf8ff')
+    .onSnapshot(snapshot => {
+      const bookmarksContainer = document.getElementById('bookmarks');
+      bookmarksContainer.innerHTML = '';
 
-    if (title.includes(searchText) || url.includes(searchText)) {
-      bookmark.style.display = 'block';
-    } else {
-      bookmark.style.display = 'none';
-    }
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const bookmarkElement = document.createElement('div');
+        bookmarkElement.classList.add('bookmark');
+        bookmarkElement.innerHTML = `
+          <div class="bookmark-title">${data.title}</div>
+          <div class="bookmark-url"><a href="${data.url}" target="_blank">${data.url}</a></div>
+          <div class="category">${data.category}</div>
+          <div class="count">${data.favorite ? "已收藏" : "未收藏"}</div>
+        `;
+        bookmarksContainer.appendChild(bookmarkElement);
+      });
+    });
+}
+
+// 退出登录
+function logout() {
+  firebase.auth().signOut().then(() => {
+    console.log("已退出登录");
+    window.location.href = 'index.html'; // 重定向到登录页
+  }).catch(error => {
+    console.error("退出登录失败", error);
   });
 }
