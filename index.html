@@ -1,171 +1,36 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的收藏夹</title>
-  <style>
-    /* 在这里加入你之前的样式 */
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-    #login-form {
-      display: flex;
-      flex-direction: column;
-      width: 200px;
-      margin: 0 auto;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h2>欢迎</h2>
-    <button id="logout" class="button" style="display: none;">退出</button>
-  </header>
-
-  <div id="login-form">
-    <h3>登录</h3>
-    <input type="email" id="email" placeholder="电子邮箱" />
-    <input type="password" id="password" placeholder="密码" />
-    <button onclick="login()" class="button">登录</button>
-  </div>
-
-  <div id="bookmarks-section" style="display: none;">
-    <h3>我的收藏夹</h3>
-    <button onclick="addBookmark()" class="button">添加收藏</button>
-    <!-- 收藏夹内容显示区域 -->
-    <div id="bookmarks-list"></div>
-  </div>
-
-  <!-- Firebase SDK -->
+  <meta charset="UTF-8">
+  <title>登录收藏夹</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <h2>登录 / 注册</h2>
+  <input type="email" id="email" placeholder="邮箱"><br>
+  <input type="password" id="password" placeholder="密码"><br>
+  <button onclick="login()">登录</button>
+  <button onclick="register()">注册</button>
 
   <script>
-    // Firebase 配置
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY", // 请替换为您的 apiKey
-      authDomain: "your-app-id.firebaseapp.com",
-      projectId: "your-app-id",
-      storageBucket: "your-app-id.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
-    };
-
-    // 初始化 Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // 登录函数
     function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
       auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log('登录成功', user);
-          document.getElementById('login-form').style.display = 'none';
-          document.getElementById('bookmarks-section').style.display = 'block';
-          document.getElementById('logout').style.display = 'block';
-        })
-        .catch((error) => {
-          console.error('登录失败', error.message);
-          alert('登录失败: ' + error.message);
-        });
+        .then(() => location.href = "bookmarks.html")
+        .catch(err => alert("登录失败：" + err.message));
     }
 
-    // 登出函数
-    document.getElementById('logout').addEventListener('click', () => {
-      auth.signOut()
-        .then(() => {
-          document.getElementById('login-form').style.display = 'block';
-          document.getElementById('bookmarks-section').style.display = 'none';
-          document.getElementById('logout').style.display = 'none';
-        })
-        .catch((error) => {
-          console.error('登出失败', error.message);
-        });
-    });
-
-    // 添加收藏夹
-    function addBookmark() {
-      const bookmarkTitle = prompt('请输入网站名称');
-      const bookmarkUrl = prompt('请输入网址');
-
-      if (bookmarkTitle && bookmarkUrl) {
-        db.collection('bookmarks').add({
-          title: bookmarkTitle,
-          url: bookmarkUrl,
-          user: auth.currentUser.uid
-        })
-        .then(() => {
-          alert('收藏成功');
-          loadBookmarks(); // 刷新收藏夹内容
-        })
-        .catch((error) => {
-          console.error('添加收藏失败', error.message);
-        });
-      }
+    function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => location.href = "bookmarks.html")
+        .catch(err => alert("注册失败：" + err.message));
     }
-
-    // 加载用户的收藏夹
-    function loadBookmarks() {
-      db.collection('bookmarks').where("user", "==", auth.currentUser.uid)
-        .get()
-        .then((querySnapshot) => {
-          const bookmarksList = document.getElementById('bookmarks-list');
-          bookmarksList.innerHTML = ''; // 清空当前收藏夹列表
-          querySnapshot.forEach((doc) => {
-            const bookmarkData = doc.data();
-            const bookmarkElement = document.createElement('div');
-            bookmarkElement.textContent = `${bookmarkData.title} - ${bookmarkData.url}`;
-            bookmarksList.appendChild(bookmarkElement);
-          });
-        })
-        .catch((error) => {
-          console.error('加载收藏失败', error.message);
-        });
-    }
-
-    // 检查用户是否已登录
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        console.log('用户已登录', user);
-        loadBookmarks();
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('bookmarks-section').style.display = 'block';
-        document.getElementById('logout').style.display = 'block';
-      } else {
-        console.log('没有登录');
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('bookmarks-section').style.display = 'none';
-        document.getElementById('logout').style.display = 'none';
-      }
-    });
   </script>
 </body>
 </html>
