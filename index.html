@@ -2,17 +2,125 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>登录</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="config.js"></script>
+  <title>我的收藏夹</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+    input, button { margin: 5px 0; padding: 6px; }
+    .bookmark { border: 1px solid #ccc; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    .favorite { color: red; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h2>欢迎登录</h2>
-  <input id="email" type="email" placeholder="邮箱" />
-  <input id="password" type="password" placeholder="密码" />
-  <button onclick="login()">登录</button>
-  <button onclick="register()">注册</button>
-  <script src="index.js"></script>
+  <h2 id="welcome">欢迎</h2>
+
+  <div id="auth-section">
+    <input type="email" id="email" placeholder="邮箱" />
+    <input type="password" id="password" placeholder="密码" />
+    <button id="login">登录</button>
+    <button id="register">注册</button>
+  </div>
+
+  <div id="app-section" style="display:none;">
+    <button id="logout">退出</button>
+    <h3>添加收藏</h3>
+    <input id="title" placeholder="网站名称" />
+    <input id="url" placeholder="https://..." />
+    <button id="add">添加</button>
+    <h3>我的收藏</h3>
+    <div id="bookmarks"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { firebaseConfig } from './config.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("login");
+    const registerBtn = document.getElementById("register");
+    const logoutBtn = document.getElementById("logout");
+    const addBtn = document.getElementById("add");
+
+    const authSection = document.getElementById("auth-section");
+    const appSection = document.getElementById("app-section");
+    const bookmarksDiv = document.getElementById("bookmarks");
+    const welcome = document.getElementById("welcome");
+
+    loginBtn.onclick = async () => {
+      try {
+        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+      } catch (e) {
+        alert("登录失败：" + e.message);
+      }
+    };
+
+    registerBtn.onclick = async () => {
+      try {
+        await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+      } catch (e) {
+        alert("注册失败：" + e.message);
+      }
+    };
+
+    logoutBtn.onclick = async () => {
+      await signOut(auth);
+    };
+
+    addBtn.onclick = async () => {
+      const title = document.getElementById("title").value;
+      const url = document.getElementById("url").value;
+      const uid = auth.currentUser.uid;
+      if (!title || !url) return;
+      await addDoc(collection(db, "bookmarks"), {
+        uid,
+        title,
+        url,
+        favorite: false,
+        created: Date.now()
+      });
+      loadBookmarks();
+    };
+
+    async function loadBookmarks() {
+      bookmarksDiv.innerHTML = "";
+      const uid = auth.currentUser.uid;
+      const querySnapshot = await getDocs(collection(db, "bookmarks"));
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.uid !== uid) return;
+        const div = document.createElement("div");
+        div.className = "bookmark";
+        div.innerHTML = `
+          <div><strong>${data.title}</strong> - <a href="${data.url}" target="_blank">${data.url}</a></div>
+          <button onclick="deleteBookmark('${docSnap.id}')">删除</button>
+        `;
+        bookmarksDiv.appendChild(div);
+      });
+    }
+
+    window.deleteBookmark = async function(id) {
+      await deleteDoc(doc(db, "bookmarks", id));
+      loadBookmarks();
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        welcome.textContent = `欢迎，${user.email}`;
+        authSection.style.display = "none";
+        appSection.style.display = "block";
+        loadBookmarks();
+      } else {
+        welcome.textContent = "欢迎";
+        authSection.style.display = "block";
+        appSection.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>

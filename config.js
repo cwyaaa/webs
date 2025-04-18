@@ -1,14 +1,10 @@
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-app-id.firebaseapp.com",
-  projectId: "your-app-id",
-  storageBucket: "your-app-id.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+// config.js
+export const firebaseConfig = {
+  apiKey: "AIzaSyCcsz9Lg3KmgvD_SXUdy4V5x7aCQtSdI-s",
+  authDomain: "webs-d0804.firebaseapp.com",
+  projectId: "webs-d0804",
+  storageBucket: "webs-d0804.appspot.com",
+  messagingSenderId: "195195304680",
+  appId: "1:195195304680:web:01c68159689678c7f4275d",
+  measurementId: "G-RRQ7RFHV76"
 };
-
-// 初始化 Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
