@@ -3,46 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>登录</title>
-  <style>
-    /* 你的样式... */
-  </style>
-</head>
-<body>
-  <header>
-    <h2>欢迎，登录以查看收藏夹</h2>
-  </header>
-
-  <div>
-    <input id="email" placeholder="邮箱" />
-    <input type="password" id="password" placeholder="密码" />
-    <button onclick="login()" class="button">登录</button>
-    <p id="error-message"></p>
-  </div>
-
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="config.js"></script> <!-- 引入 Firebase 配置 -->
-  <script>
-    // 登录逻辑
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      if (email && password) {
-        firebase.auth().signInWithEmailAndPassword(email, password)
-          .then(userCredential => {
-            // 登录成功
-            console.log("登录成功", userCredential.user);
-            window.location.href = 'bookmarks.html'; // 登录后跳转到书签页
-          })
-          .catch(error => {
-            console.error("登录失败", error);
-            document.getElementById('error-message').textContent = "登录失败，请检查账号或密码。";
-          });
-      } else {
-        alert("请输入邮箱和密码");
-      }
-    }
-  </script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <h2>欢迎登录</h2>
+  <input id="email" type="email" placeholder="邮箱" />
+  <input id="password" type="password" placeholder="密码" />
+  <button onclick="login()">登录</button>
+  <button onclick="register()">注册</button>
+  <script src="index.js"></script>
 </body>
 </html>

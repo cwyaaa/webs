@@ -1,78 +1,107 @@
-import "./config.js";
+const user = firebase.auth().currentUser;
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    location.href = "index.html";
-  } else {
-    document.getElementById("title").innerText = `欢迎，${user.email}`;
-    loadBookmarks(user.uid);
-  }
-});
-
-function logout() {
-  auth.signOut().then(() => location.href = "index.html");
+// 确保用户已登录
+if (!user) {
+  window.location.href = 'index.html';  // 如果没有登录，跳转到登录页面
 }
 
-function addBookmark() {
-  const user = auth.currentUser;
-  if (!user) return;
+// 退出登录
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = 'index.html';
+  });
+}
 
+// 添加书签
+function addBookmark() {
   const title = document.getElementById("bookmark-title").value;
   const url = document.getElementById("bookmark-url").value;
   const category = document.getElementById("bookmark-category").value;
 
-  if (!title || !url) return alert("请输入标题和链接");
-
-  db.collection("bookmarks").add({
-    uid: user.uid,
-    title,
-    url,
-    category,
-    favorite: false,
-    created: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => loadBookmarks(user.uid));
+  if (title && url) {
+    db.collection("bookmarks").add({
+      userId: user.uid,
+      title: title,
+      url: url,
+      category: category,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      loadBookmarks();  // 更新书签列表
+    }).catch(error => {
+      console.error(error.message);
+    });
+  }
 }
 
-function toggleFavorite(id, newStatus) {
-  db.collection("bookmarks").doc(id).update({ favorite: newStatus })
-    .then(() => loadBookmarks(auth.currentUser.uid));
+// 加载用户的书签
+function loadBookmarks() {
+  const bookmarksRef = db.collection("bookmarks").where("userId", "==", user.uid);
+  
+  bookmarksRef.get().then(querySnapshot => {
+    const bookmarksContainer = document.getElementById("bookmarks");
+    bookmarksContainer.innerHTML = '';  // 清空现有书签
+
+    querySnapshot.forEach(doc => {
+      const bookmark = doc.data();
+      const bookmarkElement = document.createElement("div");
+      bookmarkElement.classList.add("bookmark");
+      
+      bookmarkElement.innerHTML = `
+        <div>
+          <h4 class="bookmark-title">${bookmark.title}</h4>
+          <a href="${bookmark.url}" class="bookmark-url" target="_blank">${bookmark.url}</a>
+        </div>
+        <div>
+          <button onclick="deleteBookmark('${doc.id}')">删除</button>
+        </div>
+      `;
+      
+      bookmarksContainer.appendChild(bookmarkElement);
+    });
+  });
 }
 
-function loadBookmarks(uid) {
-  db.collection("bookmarks")
-    .where("uid", "==", uid)
-    .orderBy("created", "desc")
-    .get()
-    .then(snapshot => {
-      const container = document.getElementById("bookmarks");
-      const favoriteContainer = document.getElementById("favorite-bookmarks");
-      container.innerHTML = "";
-      favoriteContainer.innerHTML = "";
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const el = document.createElement("div");
-        el.className = "bookmark";
-        el.innerHTML = `
-          <div>
-            <div class="bookmark-title">${data.title}</div>
-            <a class="bookmark-url" href="${data.url}" target="_blank">${data.url}</a>
-          </div>
-          <div>
-            <button onclick="toggleFavorite('${doc.id}', ${!data.favorite})" class="favorite-button">
-              ${data.favorite ? "取消心标" : "加为心标"}
-            </button>
-          </div>
-        `;
-        container.appendChild(el);
-        if (data.favorite) {
-          const clone = el.cloneNode(true);
-          favoriteContainer.appendChild(clone);
-        }
-      });
+// 删除书签
+function deleteBookmark(bookmarkId) {
+  db.collection("bookmarks").doc(bookmarkId).delete()
+    .then(() => {
+      loadBookmarks();  // 更新书签列表
+    }).catch(error => {
+      console.error(error.message);
     });
 }
 
-window.logout = logout;
-window.addBookmark = addBookmark;
-window.toggleFavorite = toggleFavorite;
+// 搜索书签
+function searchBookmarks() {
+  const query = document.getElementById("search").value.toLowerCase();
+  
+  const bookmarksRef = db.collection("bookmarks").where("userId", "==", user.uid);
+  
+  bookmarksRef.get().then(querySnapshot => {
+    const bookmarksContainer = document.getElementById("bookmarks");
+    bookmarksContainer.innerHTML = '';  // 清空现有书签
+
+    querySnapshot.forEach(doc => {
+      const bookmark = doc.data();
+      if (bookmark.title.toLowerCase().includes(query) || bookmark.url.toLowerCase().includes(query)) {
+        const bookmarkElement = document.createElement("div");
+        bookmarkElement.classList.add("bookmark");
+
+        bookmarkElement.innerHTML = `
+          <div>
+            <h4 class="bookmark-title">${bookmark.title}</h4>
+            <a href="${bookmark.url}" class="bookmark-url" target="_blank">${bookmark.url}</a>
+          </div>
+          <div>
+            <button onclick="deleteBookmark('${doc.id}')">删除</button>
+          </div>
+        `;
+        
+        bookmarksContainer.appendChild(bookmarkElement);
+      }
+    });
+  });
+}
+
+// 加载用户书签
+loadBookmarks();
